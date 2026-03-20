@@ -30,6 +30,7 @@ from config_tree_widget import ConfigTreeWidget
 from draggable_tree_widget import DraggableTreeWidget
 from droppable_list_widget import DroppableListWidget
 from table_split_worker import TableSplitWorker
+from sqlite_import import SQLiteImportManager
 
 class ExcelProcessorApp(QMainWindow):
     """Excel处理工具应用类"""
@@ -53,6 +54,9 @@ class ExcelProcessorApp(QMainWindow):
         self._is_initializing = False
         # 配置改动跟踪
         self._config_modified = False
+        
+        # 初始化SQLite导入管理器
+        self.sqlite_import_manager = SQLiteImportManager(self)
         
         # 初始化UI
         self.init_ui()
@@ -307,6 +311,9 @@ class ExcelProcessorApp(QMainWindow):
         
         # 创建"转为 json"标签页
         self.create_json_convert_tab()
+        
+        # 创建"导入到SQLite"标签页
+        self.create_sqlite_import_tab()
         
         # 添加到分割器
         self.splitter.addWidget(right_frame)
@@ -600,6 +607,11 @@ class ExcelProcessorApp(QMainWindow):
         
         # 添加到标签页
         self.tab_widget.addTab(json_convert_widget, "转为 json")
+    
+    def create_sqlite_import_tab(self):
+        """创建导入到SQLite标签页"""
+        # 使用SQLite导入管理器的UI
+        self.tab_widget.addTab(self.sqlite_import_manager.ui, "导入到SQLite")
     
     def json_browse_output(self):
         """浏览JSON输出文件"""
@@ -1107,6 +1119,14 @@ class ExcelProcessorApp(QMainWindow):
             
             # 生成列选择复选框
             self.generate_columns_checkboxes()
+            
+            # 更新SQLite导入管理器的Excel信息
+            if self.sqlite_import_manager:
+                self.sqlite_import_manager.update_excel_info(
+                    self.file_path,
+                    self.current_sheet,
+                    list(self.df.columns)
+                )
             
         except Exception as e:
             error_msg = f"加载sheet失败: {str(e)}"
